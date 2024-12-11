@@ -1,4 +1,4 @@
-import { ethers } from 'ethers';
+import { ethers, zeroPadValue } from 'ethers';
 import { Request, Response } from 'express';
 
 // Interfaces for type safety
@@ -122,6 +122,10 @@ export class ChainActivityVerifier {
     }
   }
 
+  public async addressToHex(address: string): Promise<string> {
+    return zeroPadValue(address, 32); // Checksummed address
+  };
+  
   public async verifyStakingActivity(userAddress: string): Promise<boolean> {
     try {
       const stakingContract = new ethers.Contract(
@@ -132,7 +136,24 @@ export class ChainActivityVerifier {
 
       // Check staked balance
       const stakedBalance = await stakingContract.sharesOf(userAddress);
-      return BigInt(stakedBalance.toString()) > BigInt(0);
+      let result = false;
+      if (BigInt(stakedBalance.toString()) > BigInt(0)){
+        result = true
+      }
+      if (!result){
+        const topicFilter = [
+          null, '0x0000000000000000000000000000000000000000000000000000000000000000',
+          await this.addressToHex(userAddress)
+        ];
+        const logs = await this.ozeanProvider.getLogs({
+          fromBlock: 0,
+          toBlock: 'latest',
+          address: this.stakingContractAddress,
+          topics: topicFilter, 
+        });
+        result = logs.length > 0;
+      }
+      return result;
     } catch (error) {
       console.error('Staking activity check failed:', error);
       return false;
