@@ -24,7 +24,7 @@ export class ChainActivityVerifier {
   constructor() {
     // Initialize providers
     this.sepoliaProvider = new ethers.JsonRpcProvider(
-      process.env.SEPOLIA_RPC_URL || 'https://eth-sepolia.g.alchemy.com/v2/kcgp3NBBGBDW47erZa4LSfqcytTje4t5'
+      process.env.SEPOLIA_RPC_URL || 'https://eth-sepolia.g.alchemy.com/v2'
     );
 
     this.ozeanProvider = new ethers.JsonRpcProvider(
